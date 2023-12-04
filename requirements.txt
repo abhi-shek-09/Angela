@@ -1,0 +1,6 @@
+SpeechRecognition
+pyttsx3
+Pyaudio
+google-api-python-client 
+google-auth-httplib2 
+google-auth-oauthlib
