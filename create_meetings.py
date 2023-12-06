@@ -3,14 +3,34 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import json
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 load_dotenv()
 client_id = os.getenv("CLIENT_ID")
 account_id = os.getenv("ACCOUNT_ID")
 client_secret = os.getenv("CLIENT_SECRET")
+gmail_password = os.getenv("GMAIL_PASSWORD")
 auth_token_url = "https://zoom.us/oauth/token"
 api_base_url = "https://api.zoom.us/v2"
+sender_email = "your_email@gmail.com"
 
+
+def Send_Email(meeting_participants, summary, link):
+    receiver_email = meeting_participants[0]['Deepak']
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    message["Subject"] = summary
+
+    message.attach(MIMEText(link, "plain"))
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login(sender_email, "your_email_password")
+        server.sendmail(sender_email, receiver_email, message.as_string())
+
+    print("Email sent successfully.")
 
 
 def Create_Meet(topic, duration, start_date, start_time, host_user_id, attendees_names):
@@ -75,6 +95,9 @@ def Create_Meet(topic, duration, start_date, start_time, host_user_id, attendees
                 "status": 1
             }
             print(content)
+            print(meeting_participants)
+            Send_Email(meeting_participants = meeting_participants, summary = topic, link = response_data["join_url"])
+
         else:
             print("Missing 'join_url' in the API response.")
 
