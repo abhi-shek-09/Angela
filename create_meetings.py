@@ -3,7 +3,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 import json
-import smtplib
+import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -14,23 +14,29 @@ client_secret = os.getenv("CLIENT_SECRET")
 gmail_password = os.getenv("GMAIL_PASSWORD")
 auth_token_url = "https://zoom.us/oauth/token"
 api_base_url = "https://api.zoom.us/v2"
-sender_email = "your_email@gmail.com"
 
-
-def Send_Email(meeting_participants, summary, link):
+def send_email(meeting_participants, summary, link):
+    myemail = "abhisheklfps@gmail.com"
+    app_password = "nokugdxrmlucxcnz"
     receiver_email = meeting_participants[0]['Deepak']
+    subject = summary
+    body = "Below is the meet link, please do join at the right time " + link
+    
     message = MIMEMultipart()
-    message["From"] = sender_email
+    message["From"] = myemail
     message["To"] = receiver_email
-    message["Subject"] = summary
+    message["Subject"] = subject
+    message.attach(MIMEText(body, "plain"))
+    context = ssl.create_default_context()
+    smtp_server = "smtp.gmail.com"
+    smtp_port = 587
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls(context=context)
+        server.login(myemail, app_password)
+        recipients = [receiver_email]
+        server.sendmail(myemail, recipients, message.as_string())
 
-    message.attach(MIMEText(link, "plain"))
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(sender_email, "your_email_password")
-        server.sendmail(sender_email, receiver_email, message.as_string())
-
-    print("Email sent successfully.")
+    print("Email sent successfully!")
 
 
 def Create_Meet(topic, duration, start_date, start_time, host_user_id, attendees_names):
@@ -96,7 +102,7 @@ def Create_Meet(topic, duration, start_date, start_time, host_user_id, attendees
             }
             print(content)
             print(meeting_participants)
-            Send_Email(meeting_participants = meeting_participants, summary = topic, link = response_data["join_url"])
+            send_email(meeting_participants = meeting_participants, summary = topic, link = response_data["join_url"])
 
         else:
             print("Missing 'join_url' in the API response.")
